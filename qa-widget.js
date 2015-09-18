@@ -71,7 +71,8 @@ if (typeof DATA != 'undefined') {
         $("#elist span").css("float","right");
         $(".e" + eid + " .vswitch").bind("click", function () {
           // switch between variations
-          optimizely.push(["bucketVisitor", eid, $(this).html()]);
+          var parent = $(this).parents().eq(1)[0];
+          optimizely.push(["bucketVisitor", $(parent).attr("title"), $(this).html()]);
           location.reload();
         });
 
