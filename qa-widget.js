@@ -33,9 +33,11 @@ if (typeof DATA != 'undefined') {
         } else if (match && match[0].indexOf("optimizely_qa=") > -1) {
             if ($("#qabanner").length < 1) {
                 // create the QA widget if it was not created yet (might have more than 1 experiment in QA)
-                document.title = '[QA] ' + document.title; // add QA ti page title
+                $(document).ready(function () {
+                  document.title = '[QA] ' + document.title; // add QA to page title
+                });
                 $("html").prepend("<div id='qabanner'><a id='qaend'>x</a><div id='qaheader'>OPTIMIZELY QA SESSION</div><div><ul id='elist'></ul></div><div id='qatimeout'>time left in session</div></div>");
-                $("head").append("<style>#qabanner {overflow:hidden;white-space:nowrap;box-shadow:0 0 10px #888;position:absolute;top:20px;left:20px;padding:10px 10px 10px 10px;z-index:1000;background:#104F92;color:white} #qaend {cursor:pointer;color:white;float:right;position:relative;top:-10px;right:-7px} #qaheader {padding-top:10px;padding-bottom:10px} .vswitch {cursor:pointer;color:white} .vswitch.selected {text-decoration:underline}</style>");
+                $("head").append("<style>#qabanner {overflow:hidden;white-space:nowrap;box-shadow:0 0 10px #888;position:absolute;top:20px;left:20px;padding:10px 10px 10px 10px;z-index:999999;background:#104F92;color:white;font-size:14px} #qatimeout{padding-top:10px} #qaend {cursor:pointer;color:white;float:right;position:relative;top:-10px;right:-7px} #qaheader {padding-top:10px;padding-bottom:10px} .vswitch {cursor:pointer;color:white} .vswitch.selected {text-decoration:underline}</style>");
                 // set position of the widget on screen based on previous placement
                 if (localStorage.getItem("optimizely_qa_left") !== null) {
                     $("#qabanner").css({
@@ -87,19 +89,8 @@ if (typeof DATA != 'undefined') {
                             optimizely.push(["bucketVisitor", $(parent).attr("title"), $(this).attr('id')]);
                             location.reload();
                         });
-
-                        // strike through experiment if it is not active on this page
-                        /*for (i = 0; i < optimizely.activeExperiments.length; i++) {
-                            if (optimizely.activeExperiments[i] == eid) {
-                                active = true;
-                            }
-                        }
-                        if (!active) {
-                            $(".e" + eid).addClass('inactive');
-                            $("#elist li.inactive").css("text-decoration", "line-through");
-                        }*/
                     } else {
-
+                        // MVT
                         $(".e" + eid).html(optimizely.data.experiments[eid].name.substring(0, 30));
 
                         for (i = optimizely.data.experiments[eid].section_ids.length - 1; i >= 0; i--) {
@@ -128,29 +119,29 @@ if (typeof DATA != 'undefined') {
                             location.reload();
                         });
 
-                        // strike through experiment if it is not active on this page
-                        /*for (i = 0; i < optimizely.activeExperiments.length; i++) {
-                            if (optimizely.activeExperiments[i] == eid) {
-                                active = true;
-                            }
-                        }
-                        if (!active) {
-                            $(".e" + eid).addClass('inactive');
-                            $("#elist li.inactive").css("text-decoration", "line-through");
-                        }*/
-
                     }
 
                     // strike through experiment if it is not active on this page
+                  var experiment = "";
                     for (i = 0; i < optimizely.activeExperiments.length; i++) {
                         if (optimizely.activeExperiments[i] == eid) {
-                            active = true;
+                          active = true;
                         }
                     }
                     if (!active) {
                         $(".e" + eid).addClass('inactive');
                         $("#elist li.inactive").css("text-decoration", "line-through");
-                    }
+                      
+                        // manage conditonal activated experiments
+                        if (optimizely.all_experiments[eid].activation_mode == "conditional") {
+                          var itv = setInterval(function(){ 
+                            if (optimizely.all_experiments[eid].enabled === true) {
+                              $(".e" + eid).removeClass('inactive').css("text-decoration","none");
+                              clearInterval(itv);
+                            }
+                          }, 50);
+                        }
+                    } 
                 }
             });
 
@@ -197,10 +188,8 @@ if (typeof DATA != 'undefined') {
                 localStorage.setItem("optimizely_qa_top", $("#qabanner").css("top"));
             });
         } else {
-            // No QA mode! 
-            // Disable all the experiments from the array
+            // No QA mode! Disable all the experiments from the array
             for (i = 0; i < window.QA_EXPERIMENTS.length; i++) {
-                //console.log("Disable QA experiment " +window.QA_EXPERIMENTS[i]);
                 DATA.experiments[window.QA_EXPERIMENTS[i]].enabled = false;
             }
         }
